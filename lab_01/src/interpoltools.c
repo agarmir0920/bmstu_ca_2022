@@ -142,7 +142,7 @@ static void get_diff_nodes(
     }
 }
 
-static int get_newtoms_nodes(
+static int get_newtons_nodes(
     double *const x_arr,
     double *const y_arr,
     const table_t *const table,
@@ -167,22 +167,19 @@ static int get_newtons_pol_coefs(
 {
     size_t arr_size = degree + 1;
 
-    double y_arr_cpy = arralloc(arr_size);
+    double *y_arr_cpy = arralloc(arr_size);
 
     if (!y_arr_cpy)
-        return MEMORY_ALLOCATION_ERORR;
+        return MEMORY_ALLOCATION_ERROR;
 
     memcpy(y_arr_cpy, y_arr, arr_size * sizeof(double));
 
     for (size_t i = 0; i < degree; ++i)
     {
         for (size_t j = 0; j < degree - i; ++j)
-        {
             y_arr_cpy[j] = (y_arr_cpy[j] - y_arr_cpy[j + 1]) / (x_arr[j] - x_arr[j + i + 1]);
-            
-            if (j == 0)
-                coefs[i] = y_arr_cpy[0];
-        }
+
+        coefs[i] = y_arr_cpy[0];
     }
 
     free_arr(y_arr_cpy);
@@ -253,25 +250,30 @@ static int get_hermits_pol_coefs(
 {
     size_t arr_cpy_size = 2 * (degree + 1);
 
-    double y_arr_cpy = arralloc(arr_cpy_size);
+    double *y_arr_cpy = arralloc(arr_cpy_size);
 
     if (!y_arr_cpy)
-        return MEMORY_ALLOCATION_ERORR;
+        return MEMORY_ALLOCATION_ERROR;
 
-    get_duplicated_arr_cpy(y_arr_cpy, y_arr, arr_size);
+    get_duplicated_arr_cpy(y_arr_cpy, y_arr, degree + 1);
 
     for (size_t i = 0; i < degree; ++i)
     {
         for (size_t j = 0; j < arr_cpy_size - 1 - i; ++j)
         {
             if (i == 0 && j % 2 == 0)
-                y_arr_cpy[j] = diff_arr[j % 2];
+                y_arr_cpy[j] = diff_arr[j / 2];
             else
-                y_arr_cpy[j] = (y_arr_cpy[j] - y_arr_cpy[j + 1]) / (x_arr[j % 2] - x_arr[j % 2 + i + 1]);
-            
-            if (j == 0)
-                coefs[i] = y_arr_cpy[0];
+            {
+                size_t first_x_ind = j / 2;
+                size_t last_x_ind = first_x_ind + (i + i % 2) / 2 + (j % 2) * ((i + 1) % 2);
+
+                y_arr_cpy[j] = (y_arr_cpy[j] - y_arr_cpy[j + 1]) / \
+                (x_arr[first_x_ind] - x_arr[last_x_ind]);
+            }                
         }
+        
+        coefs[i] = y_arr_cpy[0];
     }
 
     free_arr(y_arr_cpy);
@@ -293,7 +295,7 @@ static double get_hermits_polynom_value(
         double summand = coefs[i];
 
         for (size_t j = 0; j <= i; ++j)
-            summand *= x - x_arr[j % 2];
+            summand *= x - x_arr[j / 2];
         
         res += summand;
     }
@@ -311,17 +313,32 @@ int interpol_with_newtons_polynom(
     double *y_arr = arralloc(degree + 1);
 
     if (!x_arr || !y_arr)
+    {
+        free_arr(x_arr);
+        free_arr(y_arr);
+
         return MEMORY_ALLOCATION_ERROR;
+    }
     
     int rc = get_newtons_nodes(x_arr, y_arr, table, x, degree);
 
     if (rc != EXIT_SUCCESS)
+    {
+        free_arr(x_arr);
+        free_arr(y_arr);
+
         return rc;
+    }
     
     double *coefs = arralloc(degree);
 
     if (!coefs)
+    {
+        free_arr(x_arr);
+        free_arr(y_arr);
+
         return MEMORY_ALLOCATION_ERROR;
+    }
 
     rc = get_newtons_pol_coefs(coefs, x_arr, y_arr, degree);
 
@@ -365,7 +382,13 @@ int interpol_with_hermits_polynom(
     int rc = get_hermits_nodes(x_arr, y_arr, diff_arr, table, x, degree);
 
     if (rc != EXIT_SUCCESS)
+    {
+        free_arr(x_arr);
+        free_arr(y_arr);
+        free_arr(diff_arr);
+
         return rc;
+    }
     
     double *coefs = arralloc(degree);
 
