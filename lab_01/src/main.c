@@ -149,7 +149,6 @@ static void fill_res_table(
 
         double hres = NAN;
 
-        // if (degree % 2 != 0)
         interpol_with_hermits_polynom(&hres, table, x, degree);
         
         res_table->nres[i] = nres;
@@ -159,6 +158,7 @@ static void fill_res_table(
 
 static void print_res_table(const res_table_t *const res_table)
 {
+    printf("\n");
     print_table_bar(RES_TABLE_WIDTH);
     printf("|    Степень   | Пол. Ньютона |  Пол. Эрмита |\n");
     print_table_bar(RES_TABLE_WIDTH);
@@ -242,7 +242,7 @@ int main(void)
     
     double root = get_root(&table);
 
-    printf("Корень функции: %lf\n", root);
+    printf("\nКорень функции: %lf\n", root);
 
     free_table(&table);
     free_res_table(&res_table);

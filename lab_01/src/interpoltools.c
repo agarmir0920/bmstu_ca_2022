@@ -53,13 +53,14 @@ void free_table(table_t *const table)
 }
 
 static size_t get_first_node_ind(
-    const table_t *const table,
+    const double *const x_arr,
+    const size_t arr_length,
     const double x)
 {
     size_t ind = 0;
 
-    for (size_t i = 0; i < table->count; ++i)
-        if (x > table->x_arr[i])
+    for (size_t i = 0; i < arr_length; ++i)
+        if (x > x_arr[i])
             ind = i;
         
     return ind;
@@ -72,7 +73,12 @@ static int get_x_nodes(
     const size_t degree)
 {   
     size_t nodes_count = degree + 1;
-    size_t node_ind = get_first_node_ind(table, x);
+    double x_cpy[table->count];
+
+    memcpy(x_cpy, table->x_arr, sizeof(double) * table->count);
+    qsort(x_cpy, table->count, sizeof(double), cmp_doubles);
+
+    size_t node_ind = get_first_node_ind(x_cpy, table->count, x);
 
     size_t ind_delta = 0;
     short int sign = -1;
@@ -85,7 +91,7 @@ static int get_x_nodes(
         
         node_ind = sign > 0 ? node_ind + ind_delta : node_ind - ind_delta;
 
-        x_arr[i] = table->x_arr[node_ind];
+        x_arr[i] = x_cpy[node_ind];
 
         sign *= -1;
         ind_delta += 1;
@@ -100,7 +106,7 @@ static int get_x_nodes(
         else
             return IMPOSSIBLE_TO_GET_SYMM_NODES;
         
-        x_arr[degree] = table->x_arr[node_ind];
+        x_arr[degree] = x_cpy[node_ind];
     }
 
     qsort(x_arr, nodes_count, sizeof(double), cmp_doubles);
