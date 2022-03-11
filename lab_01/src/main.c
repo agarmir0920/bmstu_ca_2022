@@ -139,17 +139,15 @@ static void fill_res_table(
 {
     for (size_t i = 0; i < res_table->count; ++i)
     {
-        size_t degree = i + 1;
-
-        res_table->degrees[i] = degree;
+        res_table->degrees[i] = i;
 
         double nres = NAN;
 
-        interpol_with_newtons_polynom(&nres, table, x, degree);
+        interpol_with_newtons_polynom(&nres, table, x, i);
 
         double hres = NAN;
 
-        interpol_with_hermits_polynom(&hres, table, x, degree);
+        interpol_with_hermits_polynom(&hres, table, x, i);
         
         res_table->nres[i] = nres;
         res_table->hres[i] = hres;
@@ -207,6 +205,28 @@ static double get_root(
     return root;
 }
 
+static int input_degree(size_t *const degree)
+{
+    printf("Введите максимальную степень полинома: ");
+
+    int rc = scanf("%zu", degree);
+
+    if (rc != 1)
+        return INVALID_INPUT;
+
+    return EXIT_SUCCESS;
+}
+
+static int input_data(double *const x, size_t *const degree)
+{
+    int rc = input_x(x);
+
+    if (rc == EXIT_SUCCESS)
+        rc = input_degree(degree);
+    
+    return rc;
+}
+
 int main(void)
 {
     table_t table;
@@ -219,19 +239,24 @@ int main(void)
     
     fill_table(&table);
 
-    rc = init_res_table(&res_table, RESULTS_COUNT);
-
-    if (rc != EXIT_SUCCESS)
-        return rc;
-
     double x;
+    size_t degree;
 
-    rc = input_x(&x);
+    rc = input_data(&x, &degree);
 
     if (rc != EXIT_SUCCESS)
     {
         free_table(&table);
-        free_res_table(&res_table);
+        print_error(rc);
+
+        return rc;
+    }
+
+    rc = init_res_table(&res_table, degree + 1);
+
+    if (rc != EXIT_SUCCESS)
+    {
+        free_table(&table);
         print_error(rc);
 
         return rc;
