@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 
 #include "interpoltools.h"
@@ -10,6 +11,10 @@
 
 #define TABLE_SIZE 8
 #define X_STEP 0.15
+
+#define RES_TABLE_WIDTH 46
+
+#define POLYNOM_DEGREE_FOR_ROOT 4
 
 typedef struct
 {
@@ -24,16 +29,16 @@ static int init_res_table(
     res_table_t *const res_table,
     const size_t res_count)
 {
-    res_table.count = res_count;
-    res_table.degrees = calloc(res_count, sizeof(size_t));
-    res_table.nres = calloc(res_count, sizeof(double));
-    res_table.hres = calloc(res_count, sizeof(double));
+    res_table->count = res_count;
+    res_table->degrees = calloc(res_count, sizeof(size_t));
+    res_table->nres = calloc(res_count, sizeof(double));
+    res_table->hres = calloc(res_count, sizeof(double));
 
-    if (!res_table.degrees || !res_table.nres || !res_table.hres)
+    if (!res_table->degrees || !res_table->nres || !res_table->hres)
     {
-        free(res_table.degrees);
-        free(res_table.nres);
-        free(res_table.hres);
+        free(res_table->degrees);
+        free(res_table->nres);
+        free(res_table->hres);
 
         return MEMORY_ALLOCATION_ERORR;
     }
@@ -43,9 +48,9 @@ static int init_res_table(
 
 static void free_res_table(res_table_t *const res_table)
 {
-    free_arr(res_table->degrees);
-    free_arr(res_table->nres);
-    free_arr(res_table->hres);
+    free(res_table->degrees);
+    free(res_table->nres);
+    free(res_table->hres);
 }
 
 static void fill_x_arr(double *x_arr)
@@ -127,15 +132,100 @@ static void print_table_bar(const size_t size)
     printf("\n");
 }
 
-static int get_res_table(
+static void fill_res_table(
     res_table_t *const res_table,
     const table_t *const table,
     const double x)
 {
+    for (size_t i = 0; i < res_table->count; ++i)
+    {
+        res_table->degrees[i] = i;
+
+        double nres = NAN;
+
+        interpol_with_newtons_polynom(&nres, table, x, i);
+
+        double hres = NAN;
+
+        interpol_with_hermits_polynom(&hres, table, x, i);
+        
+        res_table->nres[i] = nres;
+        res_table->hres[i] = hres;
+    }
 }
 
-static void print_res_table()
-{}
+static void print_res_table(const res_table_t *const res_table)
+{
+    printf("\n");
+    print_table_bar(RES_TABLE_WIDTH);
+    printf("|    Степень   | Пол. Ньютона |  Пол. Эрмита |\n");
+    print_table_bar(RES_TABLE_WIDTH);
+
+    for (size_t i = 0; i < res_table->count; ++i)
+    {
+        size_t degree = res_table->degrees[i];
+        double nres = res_table->nres[i];
+        double hres = res_table->hres[i];
+
+        printf("|%14zu|", degree);
+
+        if (isnan(nres))
+            printf("       -      |");
+        else
+            printf("%14f|", nres);
+        
+        if (isnan(hres))
+            printf("       -      |\n");
+        else
+            printf("%14f|\n", hres);
+        
+        print_table_bar(RES_TABLE_WIDTH);
+    }
+}
+
+static void swap_xy(table_t *const table)
+{
+    double *tmp = table->x_arr;
+
+    table->x_arr = table->y_arr;
+    table->y_arr = tmp;
+}
+
+static double get_root(
+    table_t *const table)
+{
+    swap_xy(table);
+
+    double root = NAN;
+
+    interpol_with_newtons_polynom(&root, table, 0.0, POLYNOM_DEGREE_FOR_ROOT);
+
+    swap_xy(table);
+
+    return root;
+}
+
+static int input_degree(size_t *const degree)
+{
+    printf("Введите максимальную степень полинома: ");
+
+    int rc = scanf("%zu", degree);
+
+    if (rc != 1)
+        return INVALID_INPUT;
+
+    return EXIT_SUCCESS;
+}
+
+static int input_data(double *const x, size_t *const degree)
+{
+    int rc = input_x(x);
+
+    if (rc == EXIT_SUCCESS)
+        rc = input_degree(degree);
+    
+    return rc;
+}
 
 int main(void)
 {
@@ -149,14 +239,10 @@ int main(void)
     
     fill_table(&table);
 
-    int rc = init_res_table(&res_table);
-
-    if (rc != EXIT_SUCCESS)
-        return rc;
-
     double x;
+    size_t degree;
 
-    rc = input_x(&x);
+    rc = input_data(&x, &degree);
 
     if (rc != EXIT_SUCCESS)
     {
@@ -166,17 +252,25 @@ int main(void)
         return rc;
     }
 
-    int rc = get_res_table();
-
-    free_table(&table);
-    free_res_table(&res_table);
+    rc = init_res_table(&res_table, degree + 1);
 
     if (rc != EXIT_SUCCESS)
     {
+        free_table(&table);
         print_error(rc);
 
         return rc;
     }
+
+    fill_res_table(&res_table, &table, x);
+    print_res_table(&res_table);
+    
+    double root = get_root(&table);
+
+    printf("\nКорень функции: %lf\n", root);
+
+    free_table(&table);
+    free_res_table(&res_table);
 
     return EXIT_SUCCESS;
 }
