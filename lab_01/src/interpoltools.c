@@ -57,11 +57,17 @@ static size_t get_first_node_ind(
     const size_t arr_length,
     const double x)
 {
+    double diff = fabs(x_arr[0] - x);
     size_t ind = 0;
 
     for (size_t i = 0; i < arr_length; ++i)
-        if (x > x_arr[i])
+    {
+        if (fabs(x_arr[i] - x) < diff)
+        {
             ind = i;
+            diff = fabs(x_arr[i] - x);
+        }
+    }
         
     return ind;
 }
@@ -71,7 +77,7 @@ static int get_x_nodes(
     const table_t *const table,
     const double x,
     const size_t degree)
-{   
+{
     size_t nodes_count = degree + 1;
     double x_cpy[table->count];
 
@@ -99,10 +105,10 @@ static int get_x_nodes(
 
     if (nodes_count % 2 != 0)
     {
-        if (node_ind + 1 < table->count)
-            ++node_ind;
-        else if (node_ind >= ind_delta)
+        if (node_ind >= ind_delta)
             node_ind -= ind_delta;
+        else if (node_ind + 1 < table->count)
+            ++node_ind;
         else
             return IMPOSSIBLE_TO_GET_SYMM_NODES;
         
