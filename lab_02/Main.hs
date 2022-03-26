@@ -1,12 +1,13 @@
 module Main where
 
-import CoorsTable (parseDataTable)
-import Interpol (multVarInterpol)
+import System.IO
+import CoorsTable
+import Interpol
 
 main :: IO()
 main = do
-    file = openFile "data.txt" ReadMode
-    text = hGetContents file
+    file <- openFile "data.txt" ReadMode
+    text <- hGetContents file
 
     let table = parseDataTable text
 
@@ -24,8 +25,8 @@ main = do
     putStrLn "Введите nz: "
     nz <- getLine
 
-    let coors = [x, y, z]
-    let degrees = [nx, ny, nz]
+    let coors = map (read :: String -> Double) [x, y, z]
+    let degrees = map (read :: String -> Int) [nx, ny, nz]
 
     putStr "Результат: "
     print (multVarInterpol table coors degrees)

@@ -1,19 +1,22 @@
-module Interpol (interpolation) where
+module Interpol (multVarInterpol) where
 
-import CoorsTable (Var, Coors, CoorsTable)
+import Data.List
+import CoorsTable
 
 type Degree = Int
-type Degrees = [Degrees]
+type Degrees = [Degree]
 
 type VarsList = [Var]
 type VarsLists = [VarsList]
 
 type CoefsList = [Double]
 
+type DiffsList = [Double]
+
 type ValuesList = [Double]
 
 -- Создание списка разделенных разностей функции
-getVarsDiffsLst :: VarsLists -> VarsLists
+getVarsDiffsLst :: VarsLists -> DiffsList
 getVarsDiffsLst [] = []
 getVarsDiffsLst varsLsts = diff : getVarsDiffsLst perfVarsLsts
     where diff = (y1 - y2) / (x1 - x2)
@@ -29,27 +32,27 @@ getVarsDiffsLst varsLsts = diff : getVarsDiffsLst perfVarsLsts
 getNewtonsPolCoefs :: VarsLists -> Var -> Degree -> CoefsList
 getNewtonsPolCoefs varsLsts var degree
     | degree < 0 = []
-    | length ys == lenght xs = (getNewtonsPolCoefs varsDiffsLsts var degree - 1) : y0
-    | otherwise = (getNewtonsPolCoefs varsDiffsLsts var degree - 1) : coef
+    | length ys == length xs = (getNewtonsPolCoefs varsDiffsLsts var (degree - 1)) ++ [y0]
+    | otherwise = (getNewtonsPolCoefs varsDiffsLsts var (degree - 1)) ++ [coef]
     where
     coef = head ys
     ys = last varsLsts
     xs = head varsLsts
-    y0 = if length ys `mod` 2 == 0 then ys !! (ys `div` 2) else ynear
+    y0 = if length ys `mod` 2 == 0 then ys !! (length ys `div` 2) else ynear
     ynear = if abs (yl - y0) < abs (yr - y0) then yl else yr
-    yl = ys !! (length y `div` 2)
-    yr = ys !! (length y `div` 2 + 1)
-    varsDiffsLsts = getVarsDiffsLst varsLsts
+    yl = ys !! (length ys `div` 2)
+    yr = ys !! (length ys `div` 2 + 1)
+    varsDiffsLsts = [xs, getVarsDiffsLst varsLsts]
 
 -- Значение полинома Ньютона при данном значении
 getNewtonsPolValue :: CoefsList -> VarsList -> Var -> Double
-getNewtonsPolValue coefs args arg degree
+getNewtonsPolValue coefs args arg
     | length coefs == 1 = curCoef
-    | otherwise = curCoef * mult args arg + getNewtonsPolValue (tail coefs, init args, arg)
+    | otherwise = curCoef * mult args arg + getNewtonsPolValue (tail coefs) (init args) arg
     where
     curCoef = head coefs
     mult [] _ = 1
-    mult args arg = (arg - argi) * mult (tail args, arg)
+    mult args arg = (arg - argi) * mult (tail args) arg
     argi = head args
 
 -- Интерполяция с помощью полинома Ньютона
@@ -65,10 +68,12 @@ getFuncValue :: CoorsTable -> Coors -> Double
 getFuncValue [] [_] = 0.0
 getFuncValue table coors
     | coors == curCoors = last curCoors
-    | otherwise = getFuncValue (tail table, coors)
+    | otherwise = getFuncValue (tail table) coors
+    where
+    curCoors = head table
 
 -- Получение списка значений интерполяций
-getInterValuesLst :: CoorsTable -> VarsLsts -> Coors -> Degrees -> Coors -> ValuesList
+getInterValuesLst :: CoorsTable -> VarsLists -> Coors -> Degrees -> Coors -> ValuesList
 getInterValuesLst table (varLst:othVarsLsts) (var:othVars) (degree:othDegrees) curCoors
     | null othVarsLsts = map interpolateValues varLst
     | otherwise = map interpolateInterpolated varLst
@@ -76,36 +81,39 @@ getInterValuesLst table (varLst:othVarsLsts) (var:othVars) (degree:othDegrees) c
     interpolateValues = \v -> newtonsInterpol [varLst, valuesLst] var degree
     interpolateInterpolated = \v -> newtonsInterpol [varLst, getInterpolLst v] var degree
     valuesLst = map getValue varLst
-    getValue = \v -> getFuncValue (table, curCoors : v)
-    getInterpolLst = \v -> getInterValuesLst (table, othVarsLsts, othVars, othDegrees, curCoors : v)
+    getValue = \v -> getFuncValue table (curCoors ++ [v])
+    getInterpolLst = \v -> getInterValuesLst table othVarsLsts othVars othDegrees (curCoors ++ [v])
 
 -- Интерполяция функции от двух пременных
 twoVarsInterpol :: CoorsTable -> VarsLists -> Coors -> Degrees -> Double
 twoVarsInterpol table (varLst:othVarsLsts) (var:othVars) (degree:othDegrees) = interpolResult
     where
-    interpolResult = newtonsInterpol (interpolTable, var, degree)
-    interpolTable = [varLsts, valuesLst]
-    valuesLst = if length othVarsLsts == 1 then interValuesLst else othVarsLsts
-    interValuesLst = getInterValuesLst table othVarsLsts othVars othDegrees (var)
+    interpolResult = newtonsInterpol interpolTable var degree
+    interpolTable = [varLst, valuesLst]
+    valuesLst = if length othVarsLsts > 1 then interValuesLst else head othVarsLsts
+    interValuesLst = getInterValuesLst table othVarsLsts othVars othDegrees [var]
 
 getSymmLst :: VarsList -> Var -> Degree -> VarsList
 getSymmLst vars var degree
     | length vars == degree + 1 = vars
     | length vars <= degree = []
-    | vars !! mid < var = getSymmLst (tail vars, var, degree)
-    | otherwise = getSymmLst (init vars, var, degree)
-    where mid = length vars / 2
+    | vars !! mid < var = getSymmLst (tail vars) var degree
+    | otherwise = getSymmLst (init vars) var degree
+    where
+    mid = (length vars) `div` 2
 
 -- Поиск симметричных узлов
 getSymmVarsLsts :: CoorsTable -> Coors -> Degrees -> VarsLists
-getSymmVarsLsts table (coor:coors) (degree:degrees)
+getSymmVarsLsts table coors degrees
     | length (head table) == 1 = []
-    | otherwise = symmLst ++ othSymmLsts
+    | otherwise = [symmLst] ++ othSymmLsts
     where
-    symmLst = getSymmLst fstVarLst var degree
-    othSymmLsts = getSymmVarsLsts tableWithoutFstVar coors degrees
+    symmLst = getSymmLst fstVarLst coor degree
+    othSymmLsts = getSymmVarsLsts tableWithoutFstVar (tail coors) (tail degrees)
     fstVarLst = sort (nub (map head table))
     tableWithoutFstVar = map tail table
+    coor = head coors
+    degree = head degrees
 
 -- Многомерная интерполяция
 multVarInterpol :: CoorsTable -> Coors -> Degrees -> Double
