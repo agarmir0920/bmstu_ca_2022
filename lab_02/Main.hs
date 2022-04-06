@@ -28,6 +28,8 @@ main = do
     let coors = map (read :: String -> Double) [x, y, z]
     let degrees = map (read :: String -> Int) [nx, ny, nz]
 
+    let result = multVarInterpol table coors degrees
+
     putStr "Результат: "
-    print (multVarInterpol table coors degrees)
+    if result == result then print result else putStr "Невозможно выполнить интерполяцию\n"
 

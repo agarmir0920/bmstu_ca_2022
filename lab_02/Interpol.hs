@@ -1,6 +1,6 @@
 module Interpol (multVarInterpol) where
 
-import Debug.Trace
+--import Debug.Trace
 
 import Data.List
 import Data.Maybe
@@ -122,13 +122,13 @@ getSymmVarsLsts coorsTable coors degrees
 
 -- Многомерная интерполяция
 multVarInterpol :: CoorsTable -> Coors -> Degrees -> Double
-multVarInterpol [] [_] [_] = 0.0
-multVarInterpol [_] [] [_] = 0.0
-multVarInterpol [_] [_] [] = 0.0
+multVarInterpol [] [_] [_] = 0 / 0
+multVarInterpol [_] [] [_] = 0 / 0
+multVarInterpol [_] [_] [] = 0 / 0
 multVarInterpol coorsTable coors degrees
-    | length coors /= length degrees = 0.0
-    | length (head coorsTable) < 2 = 0.0
-    | length symmVarsLsts /= length coors = 0.0
+    | length coors /= length degrees = 0 / 0
+    | length (head coorsTable) < 2 = 0 / 0
+    | length symmVarsLsts /= length coors = 0 / 0
     | length symmVarsLsts == 2 = newtonsInterpol symmVarsLsts coor degree
     | otherwise = newtonsInterpol [fstVarsLst, interpolValuesLst] coor degree
     where
