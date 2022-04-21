@@ -17,3 +17,4 @@ parseDataTable text = map toCoors (lines text)
     where
     toCoors = \str -> map toDouble (words str)
     toDouble = \str -> read str :: Double
+
