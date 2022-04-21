@@ -13,14 +13,16 @@ main = do
     let table = parseDataTable text
 
     putStrLn "Введите x: "
-    x <- getLine
+    xstr <- getLine
+
+    let x = read xstr::Double
 
     let splineRes = splineInterpolation table x 0 0
 
     putStrLn "Интерполяция сплайном: "
     print splineRes
 
-    let newtonsRes = multVarInterpolation table [x] [3]
+    let newtonsRes = multVarInterpol table [x] [3]
 
     putStrLn "Интерполяция полиномом Ньютона: "
     if newtonsRes == newtonsRes then print newtonsRes else print "-"

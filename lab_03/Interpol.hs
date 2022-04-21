@@ -4,7 +4,7 @@ module Interpol (multVarInterpol) where
 
 import Data.List
 import Data.Maybe
-import CoorsTable
+import Table
 
 type Degree = Int
 type Degrees = [Degree]

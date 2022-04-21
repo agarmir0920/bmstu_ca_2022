@@ -12,7 +12,7 @@ type Coef = Double
 type CoefsList = [Coef]
 
 data Polynom = Polynom {
-    a :: Coef
+    a :: Coef,
     b :: Coef,
     c :: Coef,
     d :: Coef,
@@ -39,23 +39,23 @@ getALst pairsLst
     | length pairsLst <= 1 = []
     | otherwise = y : ((getALst . tail) pairsLst)
     where
-    y = (last . head) pairsLst
+    y = (snd . head) pairsLst
 
 getBLst :: PairsList -> CoefsList -> CoefsList
 getBLst pairsLst cLst
     | length pairsLst <= 2 = [bn]
-    | otherwise = bi : (getBLst (tail cLst) (tail pairsLst))
+    | otherwise = bi : (getBLst (tail pairsLst) (tail cLst))
     where
     bi = (y - yprev) / h - h * (cnext - 2 * c) / 3
     bn = (y - yprev) / h - 2 * h * cnext / 3
 
     h = x - xprev
 
-    x = head curPair
-    xprev = head prevPair
+    x = fst curPair
+    xprev = fst prevPair
 
-    y = last curPair
-    yprev = last prevPair
+    y = snd curPair
+    yprev = snd prevPair
 
     prevPair = head pairsLst
     curPair = (head . tail) pairsLst
@@ -64,10 +64,10 @@ getBLst pairsLst cLst
     cnext = (head . tail) cLst
 
 getRunCoefsLst :: PairsList -> Left -> RunCoefsList -> RunCoefsList
-getRunCoefsLst pairsLst left right runCoefsLst
-    | null runCoefsLst = getRunCoefsLst left [fstRunCoefs]
+getRunCoefsLst pairsLst left runCoefsLst
+    | null runCoefsLst = getRunCoefsLst pairsLst left [fstRunCoefs]
     | length pairsLst <= 2 = runCoefsLst
-    | otherwise = getRunCoefsLst left (runCoefsLst : newRunCoefs)
+    | otherwise = getRunCoefsLst (tail pairsLst) left (runCoefsLst ++ [newRunCoefs])
     where
     fstRunCoefs = RunCoefs 0 (left / 2)
     newRunCoefs = RunCoefs newksi neweta
@@ -83,14 +83,14 @@ getRunCoefsLst pairsLst left right runCoefsLst
     pairp = (head . tail) pairsLst
     pairpp = head pairsLst
 
-    x = head pair
-    y = last pair
+    x = fst pair
+    y = snd pair
 
-    xp = head pairp
-    yp = last paitp
+    xp = fst pairp
+    yp = snd pairp
 
-    xpp = head pairpp
-    ypp = last pairpp
+    xpp = fst pairpp
+    ypp = snd pairpp
 
     lastcoefs = last runCoefsLst
     lasteta = eta lastcoefs
@@ -122,8 +122,8 @@ getDLst pairsLst cLst
     pairp = head pairsLst
     pair = (head . tail) pairsLst
 
-    x = head pair
-    xp = head pairp
+    x = fst pair
+    xp = fst pairp
 
 getSplineWithCoefs :: PairsList -> CoefsList -> CoefsList -> CoefsList -> CoefsList -> Spline
 getSplineWithCoefs pairsLst aLst bLst cLst dLst
@@ -135,8 +135,8 @@ getSplineWithCoefs pairsLst aLst bLst cLst dLst
     pair = head pairsLst
     nextPair = (head . tail) pairsLst
 
-    x = head pair
-    xNext = head nextPair
+    x = fst pair
+    xNext = fst nextPair
 
     pol = Polynom ai bi ci di x
     ai = head aLst
@@ -144,7 +144,7 @@ getSplineWithCoefs pairsLst aLst bLst cLst dLst
     ci = head cLst
     di = head dLst
 
-getSpline :: PairsList -> Left -> Right
+getSpline :: PairsList -> Left -> Right -> Spline
 getSpline pairsLst left right = getSplineWithCoefs pairsLst aLst bLst cLst dLst
     where
     aLst = getALst pairsLst
@@ -165,8 +165,10 @@ getPolynomValue pol var = ai + bi * (var - xi) + ci * (var - xi) ** 2 + di * (va
 getSplineValue :: Spline -> Var -> Double
 getSplineValue spline var
     | (var >= x1) && (var <= x2) = getPolynomValue pol var
-    | otherwise = getSplineValue (last spline) var
+    | otherwise = getSplineValue (tail spline) var
     where
+    x1 = xb curSplinePart
+    x2 = xe curSplinePart
     pol = polynom curSplinePart
     curSplinePart = head spline
 
