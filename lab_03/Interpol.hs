@@ -1,6 +1,9 @@
-module Interpol (multVarInterpol) where
+module Interpol 
+    ( multVarInterpol
+    , get3DPolSndDiffValue)
+    where
 
-import Debug.Trace
+-- import Debug.Trace
 
 import Data.List
 import Data.Maybe
@@ -121,10 +124,12 @@ getSymmVarsLsts coorsTable coors degrees
     othDegrees = tail degrees
 
 -- Вычисление производной третьего порядка от полинома Ньютона 3-й степени
-get3DPolSndDiffValue :: CoorsTable -> Var -> Degree -> Double
-get3DPolSndDiffValue coorsTable var degree = 2 * y2 + y3 * (6 * var - 2 * (x0 + x1 + x2))
+get3DPolSndDiffValue :: CoorsTable -> Var -> Var -> Degree -> Double
+get3DPolSndDiffValue coorsTable xbase var degree
+    | null symmVarsLsts = 0 / 0
+    | otherwise = 2 * y2 + y3 * (6 * var - 2 * (x0 + x1 + x2))
     where
-    symmVarsLsts = getSymmVarsLsts tableWithoutValues [var] [degree]
+    symmVarsLsts = getSymmVarsLsts tableWithoutValues [xbase] [degree]
     tableWithoutValues = map init coorsTable
     fstVarsLst = head symmVarsLsts
     valuesLst = map last (filter (\c -> (head c) `elem` fstVarsLst) coorsTable)
@@ -133,9 +138,17 @@ get3DPolSndDiffValue coorsTable var degree = 2 * y2 + y3 * (6 * var - 2 * (x0 + 
     x1 = fstVarsLst !! 1
     x2 = fstVarsLst !! 2
 
-    coefs = getNewtonsPolCoefs [fstVarsLst, valuesLst] degree
-    y2 = coefs !! 2
-    y3 = coefs !! 3
+    varsLsts = [fstVarsLst, valuesLst]
+
+    coefs = (getNewtonsPolCoefs varsLsts degree) ++ [valuesLst !! nearArgInd]
+
+    nearArgInd = fromMaybe 0 (elemIndex minArgDiff argDiffsLst)
+    minArgDiff = minimum argDiffsLst
+    argDiffsLst = map (\x -> abs (x - var)) fstVarsLst
+
+    y2 = coefs !! 1
+    y3 = coefs !! 0
+
 
 -- Многомерная интерполяция
 multVarInterpol :: CoorsTable -> Coors -> Degrees -> Double

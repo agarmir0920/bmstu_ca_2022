@@ -1,6 +1,6 @@
-module Spline where
+module Spline (splineInterpolation) where
 
-import Debug.Trace
+-- import Debug.Trace
 
 import Interpol
 import Table
@@ -49,7 +49,7 @@ getBLst pairsLst cLst
     | otherwise = bi : (getBLst (tail pairsLst) (tail cLst))
     where
     bi = (y - yprev) / h - h * (cnext + 2 * c) / 3
-    bn = traceShow (h) ((y - yprev) / h - 2 / 3 * h * c)
+    bn = (y - yprev) / h - 2 / 3 * h * c
 
     h = x - xprev
 
