@@ -1,9 +1,9 @@
 module Spline where
 
+import Debug.Trace
+
 import Interpol
 import Table
-
-type PairsList = [(Var, Var)]
 
 type Left = Double
 type Right = Double
@@ -17,53 +17,53 @@ data Polynom = Polynom {
     c :: Coef,
     d :: Coef,
     xf :: Double
-}
+} deriving (Show)
 
 data SplinePart = SplinePart {
     xb :: Var,
     xe :: Var,
     polynom :: Polynom
-}
+} deriving (Show)
 
 type Spline = [SplinePart]
 
 data RunCoefs = RunCoefs {
     ksi :: Coef,
     eta :: Coef
-}
+} deriving (Show)
 
 type RunCoefsList = [RunCoefs]
 
-getALst :: PairsList -> CoefsList
+getALst :: CoorsTable -> CoefsList
 getALst pairsLst
     | length pairsLst <= 1 = []
     | otherwise = y : ((getALst . tail) pairsLst)
     where
-    y = (snd . head) pairsLst
+    y = (last . head) pairsLst
 
-getBLst :: PairsList -> CoefsList -> CoefsList
+getBLst :: CoorsTable -> CoefsList -> CoefsList
 getBLst pairsLst cLst
-    | length pairsLst <= 2 = [bn]
+    | length cLst <= 1 = [bn]
     | otherwise = bi : (getBLst (tail pairsLst) (tail cLst))
     where
-    bi = (y - yprev) / h - h * (cnext - 2 * c) / 3
-    bn = (y - yprev) / h - 2 * h * cnext / 3
+    bi = (y - yprev) / h - h * (cnext + 2 * c) / 3
+    bn = traceShow (h) ((y - yprev) / h - 2 / 3 * h * c)
 
     h = x - xprev
 
-    x = fst curPair
-    xprev = fst prevPair
+    x = head curPair
+    xprev = head prevPair
 
-    y = snd curPair
-    yprev = snd prevPair
+    y = last curPair
+    yprev = last prevPair
 
-    prevPair = head pairsLst
-    curPair = (head . tail) pairsLst
+    prevPair = pairsLst !! 0
+    curPair = pairsLst !! 1
 
-    c = head cLst
-    cnext = (head . tail) cLst
+    c = cLst !! 0
+    cnext = cLst !! 1
 
-getRunCoefsLst :: PairsList -> Left -> RunCoefsList -> RunCoefsList
+getRunCoefsLst :: CoorsTable -> Left -> RunCoefsList -> RunCoefsList
 getRunCoefsLst pairsLst left runCoefsLst
     | null runCoefsLst = getRunCoefsLst pairsLst left [fstRunCoefs]
     | length pairsLst <= 2 = runCoefsLst
@@ -72,25 +72,25 @@ getRunCoefsLst pairsLst left runCoefsLst
     fstRunCoefs = RunCoefs 0 (left / 2)
     newRunCoefs = RunCoefs newksi neweta
 
-    newksi = negate (h / (prevh * lastksi + 2 * (h + prevh)))
+    newksi = negate $ h / (prevh * lastksi + 2 * (h + prevh))
     neweta = (f - prevh * lasteta) / (prevh * lastksi + 2 * (h + prevh))
     f = 3 * ((y - yp) / h - (yp - ypp) / prevh)
 
     h = x - xp
     prevh = xp - xpp
 
-    pair = (head . tail . tail) pairsLst
-    pairp = (head . tail) pairsLst
-    pairpp = head pairsLst
+    pair = pairsLst !! 2
+    pairp = pairsLst !! 1
+    pairpp = pairsLst !! 0
 
-    x = fst pair
-    y = snd pair
+    x = head pair
+    y = last pair
 
-    xp = fst pairp
-    yp = snd pairp
+    xp = head pairp
+    yp = last pairp
 
-    xpp = fst pairpp
-    ypp = snd pairpp
+    xpp = head pairpp
+    ypp = last pairpp
 
     lastcoefs = last runCoefsLst
     lasteta = eta lastcoefs
@@ -98,8 +98,8 @@ getRunCoefsLst pairsLst left runCoefsLst
 
 getCLst :: RunCoefsList -> Left -> Right -> CoefsList -> CoefsList
 getCLst runCoefsLst left right cLst
-    | null cLst = getCLst runCoefsLst left right [right]
-    | null runCoefsLst = left : cLst
+    | null cLst = getCLst (init runCoefsLst) left right [right]
+    | null runCoefsLst = cLst
     | otherwise = getCLst (init runCoefsLst) left right (ci : cLst)
     where
     ci = lastksi * cnext + lasteta
@@ -109,34 +109,34 @@ getCLst runCoefsLst left right cLst
     lastksi = ksi lastRunCoefs
     lasteta = eta lastRunCoefs
 
-getDLst :: PairsList -> CoefsList -> CoefsList
+getDLst :: CoorsTable -> CoefsList -> CoefsList
 getDLst pairsLst cLst
-    | length pairsLst <= 2 = [negate (c / 3 / h)]
+    | length cLst <= 1 = [negate (c / 3 / h)]
     | otherwise = [(cnext - c) / 3 / h] ++ (getDLst (tail pairsLst) (tail cLst))
     where
-    c = head cLst
-    cnext = (head . tail) cLst
+    c = cLst !! 0
+    cnext = cLst !! 1
 
     h = x - xp
 
-    pairp = head pairsLst
-    pair = (head . tail) pairsLst
+    pairp = pairsLst !! 0
+    pair = pairsLst !! 1
 
-    x = fst pair
-    xp = fst pairp
+    x = head pair
+    xp = head pairp
 
-getSplineWithCoefs :: PairsList -> CoefsList -> CoefsList -> CoefsList -> CoefsList -> Spline
+getSplineWithCoefs :: CoorsTable -> CoefsList -> CoefsList -> CoefsList -> CoefsList -> Spline
 getSplineWithCoefs pairsLst aLst bLst cLst dLst
     | length pairsLst <= 1 = []
     | otherwise = splinePart : (getSplineWithCoefs (tail pairsLst) (tail aLst) (tail bLst) (tail cLst) (tail dLst))
     where
     splinePart = SplinePart x xNext pol
 
-    pair = head pairsLst
-    nextPair = (head . tail) pairsLst
+    pair = pairsLst !! 0
+    nextPair = pairsLst !! 1
 
-    x = fst pair
-    xNext = fst nextPair
+    x = head pair
+    xNext = head nextPair
 
     pol = Polynom ai bi ci di x
     ai = head aLst
@@ -144,7 +144,7 @@ getSplineWithCoefs pairsLst aLst bLst cLst dLst
     ci = head cLst
     di = head dLst
 
-getSpline :: PairsList -> Left -> Right -> Spline
+getSpline :: CoorsTable -> Left -> Right -> Spline
 getSpline pairsLst left right = getSplineWithCoefs pairsLst aLst bLst cLst dLst
     where
     aLst = getALst pairsLst
@@ -180,6 +180,5 @@ splineInterpolation coorsTable var left right
     where
     xs = head coorsTable
     ys = last coorsTable
-    spline = getSpline pairsLst left right
-    pairsLst = zip xs ys
+    spline = getSpline coorsTable left right
 
