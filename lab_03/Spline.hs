@@ -34,6 +34,7 @@ data RunCoefs = RunCoefs {
 
 type RunCoefsList = [RunCoefs]
 
+-- Вычисление коэффициентов a
 getALst :: CoorsTable -> CoefsList
 getALst pairsLst
     | length pairsLst <= 1 = []
@@ -41,6 +42,7 @@ getALst pairsLst
     where
     y = (last . head) pairsLst
 
+-- Вычисление коэффициентов b
 getBLst :: CoorsTable -> CoefsList -> CoefsList
 getBLst pairsLst cLst
     | length cLst <= 1 = [bn]
@@ -63,6 +65,7 @@ getBLst pairsLst cLst
     c = cLst !! 0
     cnext = cLst !! 1
 
+-- Вычисление прогоночных коэффициентов
 getRunCoefsLst :: CoorsTable -> Left -> RunCoefsList -> RunCoefsList
 getRunCoefsLst pairsLst left runCoefsLst
     | null runCoefsLst = getRunCoefsLst pairsLst left [fstRunCoefs]
@@ -96,6 +99,7 @@ getRunCoefsLst pairsLst left runCoefsLst
     lasteta = eta lastcoefs
     lastksi = ksi lastcoefs
 
+-- Вычисление коэффициентов c
 getCLst :: RunCoefsList -> Left -> Right -> CoefsList -> CoefsList
 getCLst runCoefsLst left right cLst
     | null cLst = getCLst (init runCoefsLst) left right [right]
@@ -109,6 +113,7 @@ getCLst runCoefsLst left right cLst
     lastksi = ksi lastRunCoefs
     lasteta = eta lastRunCoefs
 
+-- Вычисление коэффициентов d
 getDLst :: CoorsTable -> CoefsList -> CoefsList
 getDLst pairsLst cLst
     | length cLst <= 1 = [negate (c / 3 / h)]
@@ -125,6 +130,7 @@ getDLst pairsLst cLst
     x = head pair
     xp = head pairp
 
+-- Образование сплайна с помощью списков соответствующих коэффициентов
 getSplineWithCoefs :: CoorsTable -> CoefsList -> CoefsList -> CoefsList -> CoefsList -> Spline
 getSplineWithCoefs pairsLst aLst bLst cLst dLst
     | length pairsLst <= 1 = []
@@ -144,6 +150,7 @@ getSplineWithCoefs pairsLst aLst bLst cLst dLst
     ci = head cLst
     di = head dLst
 
+-- Вычисление сплайна
 getSpline :: CoorsTable -> Left -> Right -> Spline
 getSpline pairsLst left right = getSplineWithCoefs pairsLst aLst bLst cLst dLst
     where
@@ -153,6 +160,7 @@ getSpline pairsLst left right = getSplineWithCoefs pairsLst aLst bLst cLst dLst
     dLst = getDLst pairsLst cLst
     runCoefsLst = getRunCoefsLst pairsLst left []
 
+-- Значение полинома сплайна
 getPolynomValue :: Polynom -> Var -> Double
 getPolynomValue pol var = ai + bi * (var - xi) + ci * (var - xi) ** 2 + di * (var - xi) ** 3
     where
@@ -162,6 +170,7 @@ getPolynomValue pol var = ai + bi * (var - xi) + ci * (var - xi) ** 2 + di * (va
     di = d pol
     xi = xf pol
 
+-- Значение сплайна
 getSplineValue :: Spline -> Var -> Double
 getSplineValue spline var
     | (var >= x1) && (var <= x2) = getPolynomValue pol var
@@ -172,6 +181,7 @@ getSplineValue spline var
     pol = polynom curSplinePart
     curSplinePart = head spline
 
+-- Интерполяция сплайнами
 splineInterpolation :: CoorsTable -> Var -> Left -> Right -> Double
 splineInterpolation [] _ _ _ = 0 / 0
 splineInterpolation coorsTable var left right

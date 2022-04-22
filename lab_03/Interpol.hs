@@ -120,6 +120,7 @@ getSymmVarsLsts coorsTable coors degrees
     degree = head degrees
     othDegrees = tail degrees
 
+-- Вычисление производной третьего порядка от полинома Ньютона 3-й степени
 get3DPolSndDiffValue :: CoorsTable -> Var -> Degree -> Double
 get3DPolSndDiffValue coorsTable var degree = 2 * y2 + y3 * (6 * var - 2 * (x0 + x1 + x2))
     where
