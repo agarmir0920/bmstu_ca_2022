@@ -120,6 +120,22 @@ getSymmVarsLsts coorsTable coors degrees
     degree = head degrees
     othDegrees = tail degrees
 
+get3DPolSndDiffValue :: CoorsTable -> Var -> Degree -> Double
+get3DPolSndDiffValue coorsTable var degree = 2 * y2 + y3 * (6 * var - 2 * (x0 + x1 + x2))
+    where
+    symmVarsLsts = getSymmVarsLsts tableWithoutValues [var] [degree]
+    tableWithoutValues = map init coorsTable
+    fstVarsLst = head symmVarsLsts
+    valuesLst = map last (filter (\c -> (head c) `elem` fstVarsLst) coorsTable)
+
+    x0 = fstVarsLst !! 0
+    x1 = fstVarsLst !! 1
+    x2 = fstVarsLst !! 2
+
+    coefs = getNewtonsPolCoefs [fstVarsLst, valuesLst] degree
+    y2 = coefs !! 2
+    y3 = coefs !! 3
+
 -- Многомерная интерполяция
 multVarInterpol :: CoorsTable -> Coors -> Degrees -> Double
 multVarInterpol [] [_] [_] = 0 / 0
