@@ -1,6 +1,6 @@
 module Interpol (multVarInterpol) where
 
---import Debug.Trace
+import Debug.Trace
 
 import Data.List
 import Data.Maybe
@@ -129,7 +129,7 @@ multVarInterpol coorsTable coors degrees
     | length coors /= length degrees = 0 / 0
     | length (head coorsTable) < 2 = 0 / 0
     | length symmVarsLsts /= length coors = 0 / 0
-    | length symmVarsLsts == 2 = newtonsInterpol symmVarsLsts coor degree
+    | length (head coorsTable) == 2 = newtonsInterpol [fstVarsLst, valuesLst] coor degree
     | otherwise = newtonsInterpol [fstVarsLst, interpolValuesLst] coor degree
     where
     symmVarsLsts = getSymmVarsLsts tableWithoutValues coors degrees
@@ -139,4 +139,6 @@ multVarInterpol coorsTable coors degrees
     othDegrees = tail degrees
     tableWithoutValues = map init coorsTable
     fstVarsLst = head symmVarsLsts
+    valuesLst = map last (filter (\c -> (head c) `elem` fstVarsLst) coorsTable)
     interpolValuesLst = getInterpolValuesLst coorsTable symmVarsLsts othCoors othDegrees []
+

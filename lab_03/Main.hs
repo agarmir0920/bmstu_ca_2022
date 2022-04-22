@@ -19,11 +19,11 @@ main = do
 
     let splineRes = splineInterpolation table x 0 0
 
-    putStrLn "Интерполяция сплайном: "
+    putStr "Интерполяция сплайном: "
     print splineRes
 
     let newtonsRes = multVarInterpol table [x] [3]
 
-    putStrLn "Интерполяция полиномом Ньютона: "
-    if newtonsRes == newtonsRes then print newtonsRes else print "-"
+    putStr "Интерполяция полиномом Ньютона: "
+    if newtonsRes == newtonsRes then print newtonsRes else putStrLn "-"
 
