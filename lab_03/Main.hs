@@ -12,8 +12,6 @@ main = do
 
     let table = parseDataTable text
 
-    print table
-
     putStrLn "Введите x: "
     xstr <- getLine
 
