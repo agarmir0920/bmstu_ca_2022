@@ -1,6 +1,6 @@
 module Spline (splineInterpolation) where
 
--- import Debug.Trace
+import Debug.Trace
 
 import Interpol
 import Table
@@ -45,7 +45,7 @@ getALst pairsLst
 -- Вычисление коэффициентов b
 getBLst :: CoorsTable -> CoefsList -> CoefsList
 getBLst pairsLst cLst
-    | length cLst <= 1 = [bn]
+    | length pairsLst <= 2 = [bn]
     | otherwise = bi : (getBLst (tail pairsLst) (tail cLst))
     where
     bi = (y - yprev) / h - h * (cnext + 2 * c) / 3
@@ -70,7 +70,7 @@ getRunCoefsLst :: CoorsTable -> Left -> RunCoefsList -> RunCoefsList
 getRunCoefsLst pairsLst left runCoefsLst
     | null runCoefsLst = getRunCoefsLst pairsLst left [fstRunCoefs]
     | length pairsLst <= 2 = runCoefsLst
-    | otherwise = getRunCoefsLst (tail pairsLst) left (runCoefsLst ++ [newRunCoefs])
+    | otherwise = getRunCoefsLst (tail pairsLst) left (runCoefsLst ++ [newRunCoefs]) 
     where
     fstRunCoefs = RunCoefs 0 (left / 2)
     newRunCoefs = RunCoefs newksi neweta
@@ -102,7 +102,7 @@ getRunCoefsLst pairsLst left runCoefsLst
 -- Вычисление коэффициентов c
 getCLst :: RunCoefsList -> Left -> Right -> CoefsList -> CoefsList
 getCLst runCoefsLst left right cLst
-    | null cLst = getCLst (init runCoefsLst) left right [right]
+    | null cLst = getCLst runCoefsLst left right [right / 2]
     | null runCoefsLst = cLst
     | otherwise = getCLst (init runCoefsLst) left right (ci : cLst)
     where
@@ -116,7 +116,7 @@ getCLst runCoefsLst left right cLst
 -- Вычисление коэффициентов d
 getDLst :: CoorsTable -> CoefsList -> CoefsList
 getDLst pairsLst cLst
-    | length cLst <= 1 = [negate (c / 3 / h)]
+    | length pairsLst <= 2 = [negate (c / 3 / h)]
     | otherwise = [(cnext - c) / 3 / h] ++ (getDLst (tail pairsLst) (tail cLst))
     where
     c = cLst !! 0
