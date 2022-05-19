@@ -3,6 +3,9 @@ module Main where
 import System.IO
 import System.Directory
 
+import Aprox
+import DataTable
+
 type Command = Int
 type Polynom = [Polynoms]
 
@@ -35,7 +38,7 @@ executeOneWeightSet data = do
     return $ MainData newTable (polynoms data)
 
     where
-    newTable = (init (funcTable data)) ++ (take (length ((funcTable data) !! 0)) (repeat p))
+    newTable = map (\arr -> (init arr) ++ [p]) (funcTable data)
 
 executeAllWeightSet :: MainData -> MainData
 executeAllWeightSet data = do
@@ -44,10 +47,13 @@ executeAllWeightSet data = do
     psStr <- getLine
     let ps = map (\pStr -> read pStr::Double) (words psStr)
 
+    let tableSize = length table
+
     return $ MainData newTable (polynoms data)
 
     where
-    newTable = (init (funcTable data)) ++ ps
+    newTable = map (\arr -> (init arr) ++ [ps !! (tableSize - (length table))]) table
+    table = funcTable data
 
 executeWeightsChanging :: MainData -> MainData
 executeWeightsChanging data = do
