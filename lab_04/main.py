@@ -1,5 +1,7 @@
-from aprox import Polynom
+from os.path import exists
+
 from datatable import Table
+from aprox import Polynom
 
 
 Polynoms = list[Polynom]
