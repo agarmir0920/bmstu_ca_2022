@@ -7,7 +7,7 @@ import Aprox
 import DataTable
 
 type Command = Int
-type Polynom = [Polynoms]
+type Polynoms = [Polynom]
 
 data MainData = MainData {
     funcTable :: FuncTable,
@@ -67,11 +67,13 @@ executeWeightsChanging data = do
     else
         executeAllWeightSet mainData
 
+-- TODO: Нужно организовать ввод степени полинома
 executePolynomAdding :: MainData -> MainData
 executePolynomAdding data = MainData table newPolynoms
     where
-    newPolynoms = (polynoms data) ++ (getAproxPolynom table)
+    newPolynoms = (polynoms data) ++ (getAproxPolynom table degree)
     table = funcTable data
+    degree = 2
 
 executePolynomClearing :: MainData -> MainData
 executePolynomClearing data = MainData (funcTable data) []
