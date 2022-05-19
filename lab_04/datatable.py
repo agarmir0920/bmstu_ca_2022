@@ -1,6 +1,5 @@
 from sys import stdin, stdout
 
-
 Table = list[list[float]]
 
 

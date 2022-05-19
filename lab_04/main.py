@@ -3,9 +3,7 @@ from os.path import exists
 from datatable import Table
 from aprox import Polynom
 
-
 Polynoms = list[Polynom]
-
 
 EXIT = 0
 LOAD_TABLE = 1
