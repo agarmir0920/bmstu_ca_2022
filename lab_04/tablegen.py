@@ -24,16 +24,12 @@ def gen_3d():
             for y in range(MIN_Y, MAX_Y, STEP_Y):
                 z = uniform(0, 100)
 
-            print(x, y, z, 1, file=file)
+                print(x, y, z, 1, file=file)
 
 
 def main():
-    dim = int(input())
-
-    if dim == 2:
-        gen_2d()
-    elif dim == 3:
-        gen_3d()
+    gen_2d()
+    gen_3d()
 
 
 if __name__ == "__main__":

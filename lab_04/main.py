@@ -44,6 +44,7 @@ def execute_loading(table: Table, polynoms: Polynoms):
             polynoms = []
 
         print("Таблица загружена")
+        print(table)
 
 
 def execute_p_changing(table: Table):

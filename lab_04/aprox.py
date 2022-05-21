@@ -21,7 +21,7 @@ def get_funcs_dot(ws: list[float],
     return s
 
 
-def get_one_dim_sle(mtrx: np.mtrx,
+def get_one_dim_sle(mtrx: np.matrix,
                     bs: np.array,
                     table: Table,
                     degree: int):
@@ -66,7 +66,7 @@ def get_two_dim_phi_value(x: float, y: float, k: int) -> float:
         return y * y
 
 
-def get_two_dim_sle(mtrx: np.mtrx,
+def get_two_dim_sle(mtrx: np.matrix,
                     bs: np.array,
                     table: Table,
                     degree: int):

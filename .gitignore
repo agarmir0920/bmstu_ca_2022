@@ -3,3 +3,4 @@
 *.exe
 *.hi
 */.idea
+*/__pycache__
