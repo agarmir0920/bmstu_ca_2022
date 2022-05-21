@@ -4,6 +4,8 @@ from os.path import exists
 from datatable import *
 from aprox import *
 
+# TODO: Пофиксить двумерную апроксимацию
+
 Polynoms = list[Polynom]
 
 EXIT = 0
@@ -44,7 +46,8 @@ def execute_loading(table: Table, polynoms: Polynoms):
             polynoms = []
 
         print("Таблица загружена")
-        print(table)
+
+    return table, polynoms
 
 
 def execute_p_changing(table: Table):
@@ -62,6 +65,8 @@ def execute_p_changing(table: Table):
         for i in range(len(table)):
             table[i][-1] = ws[i]
 
+    return table
+
 
 def execute_polynom_adding(table: Table, polynoms: Polynoms):
     if not table:
@@ -71,15 +76,19 @@ def execute_polynom_adding(table: Table, polynoms: Polynoms):
 
     pol = get_aprox_pol(table, degree)
 
+    print(pol)
+
     if pol:
         polynoms.append(pol)
         print("Добавлен полином")
 
+    return table, polynoms
 
-def execute_polynoms_clearing(polynoms: Polynoms):
-    polynoms = []
 
+def execute_polynoms_clearing():
     print("Массив полиномов очищен")
+
+    return []
 
 
 def execute_table_printing(table: Table):
@@ -137,9 +146,6 @@ def draw3d(table: Table, polynoms: Polynoms):
 
     ax = plt.figure().add_subplot(projection="3d")
 
-    for row in table:
-        plt.scatter(row[0], row[1], row[2], c="red")
-
     for pol in polynoms:
         zs = get_3d_pol_values(xs, ys, pol)
 
@@ -152,30 +158,27 @@ def execute_graph_printing(table: Table, polynoms: Polynoms):
     if not table or not polynoms:
         return
 
-    if len(table) == ONE_DIM:
+    if len(table[0]) == ONE_DIM:
         draw2d(table, polynoms)
-    elif len(table) == TWO_DIM:
+    elif len(table[0]) == TWO_DIM:
         draw3d(table, polynoms)
 
 
-def execute_command(table: list, polynoms: list, cmd: int) -> bool:
-    if cmd == EXIT:
-        return False
-
+def execute_command(table: Table, polynoms: Polynoms, cmd: int):
     if cmd == LOAD_TABLE:
-        execute_loading(table, polynoms)
+        table, polynoms = execute_loading(table, polynoms)
     elif cmd == CHANGE_P:
-        execute_p_changing(table)
+        table = execute_p_changing(table)
     elif cmd == ADD_POL:
-        execute_polynom_adding(table, polynoms)
+        table, polynoms = execute_polynom_adding(table, polynoms)
     elif cmd == CLEAR_POLS:
-        execute_polynoms_clearing(polynoms)
+        polynoms = execute_polynoms_clearing()
     elif cmd == PRINT_TABLE:
         execute_table_printing(table)
     elif cmd == PRINT_GRAPH:
         execute_graph_printing(table, polynoms)
 
-    return True
+    return table, polynoms
 
 
 def main():
@@ -189,7 +192,10 @@ def main():
 
         cmd = int(input())
 
-        running = execute_command(table, polynoms, cmd)
+        if cmd == EXIT:
+            running = False
+        else:
+            table, polynoms = execute_command(table, polynoms, cmd)
 
 
 if __name__ == "__main__":

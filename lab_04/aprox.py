@@ -6,8 +6,8 @@ import sle
 Polynom = list[float]
 
 
-ONE_DIM_TABLE_COLS_COUNT = 2
-TWO_DIM_TABLE_ROWS_COUNT = 3
+ONE_DIM_TABLE_COLS_COUNT = 3
+TWO_DIM_TABLE_ROWS_COUNT = 4
 
 
 def get_funcs_dot(ws: list[float],
@@ -16,7 +16,7 @@ def get_funcs_dot(ws: list[float],
     s = 0.0
 
     for i in range(len(ws)):
-        s += ws[i] * cs1[1] * cs2[2]
+        s += ws[i] * cs1[i] * cs2[i]
 
     return s
 
@@ -34,14 +34,14 @@ def get_one_dim_sle(mtrx: np.matrix,
 
         for j in range(degree + 1):
             cs2 = list(map(lambda x: x ** j, xs))
-            mtrx[i][j] = get_funcs_dot(ws, cs1, cs2)
+            mtrx[i, j] = get_funcs_dot(ws, cs1, cs2)
 
         bs[i] = get_funcs_dot(ws, cs1, ys)
 
 
 def get_one_dim_aprox_pol(table: Table, degree: int) -> Polynom:
-    mtrx = np.mtrx(np.zeros((degree + 1, degree + 1)))
-    bs = np.array(degree + 1)
+    mtrx = np.matrix(np.zeros((degree + 1, degree + 1)))
+    bs = np.zeros(degree + 1)
 
     get_one_dim_sle(mtrx, bs, table, degree)
 
@@ -78,14 +78,14 @@ def get_two_dim_sle(mtrx: np.matrix,
 
         for j in range(degree + 2):
             cs2 = list(map(lambda row: get_two_dim_phi_value(row[0], row[1], j), table))
-            mtrx[i][j] = get_funcs_dot(ws, cs1, cs2)
+            mtrx[i, j] = get_funcs_dot(ws, cs1, cs2)
 
         bs[i] = get_funcs_dot(ws, cs1, zs)
 
 
 def get_two_dim_aprox_pol(table: Table, degree: int) -> Polynom:
-    mtrx = np.mtrx(np.zeros((degree + 1, degree + 2)))
-    bs = np.array(degree + 1)
+    mtrx = np.matrix(np.zeros((degree + 1, degree + 2)))
+    bs = np.zeros(degree + 1)
 
     get_two_dim_sle(mtrx, bs, table, degree)
 

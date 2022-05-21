@@ -5,7 +5,7 @@ Table = list[list[float]]
 
 def input_table(file=stdin) -> Table:
     text = file.read()
-    lines = text.split('\n')
+    lines = text.strip().split('\n')
     table = [list(map(float, line.split())) for line in lines]
 
     return table

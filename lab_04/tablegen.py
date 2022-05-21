@@ -3,17 +3,17 @@ from random import uniform
 
 MIN_X = 0
 MAX_X = 20
-STEP_X = 1
+STEP_X = 0.2
 
 MIN_Y = 0
 MAX_Y = 20
-STEP_Y = 1
+STEP_Y = 0.2
 
 
 def gen_2d():
     with open("data2d.txt", "w") as file:
         for x in range(MIN_X, MAX_X, STEP_X):
-            y = uniform(0, 100)
+            y = uniform(0, 3)
 
             print(x, y, 1, file=file)
 
@@ -22,7 +22,7 @@ def gen_3d():
     with open("data3d.txt", "w") as file:
         for x in range(MIN_X, MAX_X, STEP_X):
             for y in range(MIN_Y, MAX_Y, STEP_Y):
-                z = uniform(0, 100)
+                z = uniform(0, 3)
 
                 print(x, y, z, 1, file=file)
 
