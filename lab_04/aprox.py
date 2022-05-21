@@ -10,15 +10,13 @@ ONE_DIM_TABLE_COLS_COUNT = 2
 TWO_DIM_TABLE_ROWS_COUNT = 3
 
 
-def get_one_dim_funcs_dot(ws: list[float],
-                          cs1: list[float],
-                          cs2: list[float],
-                          deg1: int,
-                          deg2: int) -> float:
+def get_funcs_dot(ws: list[float],
+                  cs1: list[float],
+                  cs2: list[float]):
     s = 0.0
 
     for i in range(len(ws)):
-        s += ws[i] * (cs1[i] ** deg1) * (cs2[i] ** deg2)
+        s += ws[i] * cs1[1] * cs2[2]
 
     return s
 
@@ -32,9 +30,13 @@ def get_one_dim_sle(mtrx: np.mtrx,
     ws = get_weights(table)
 
     for i in range(degree + 1):
+        cs1 = list(map(lambda x: x ** i, xs))
+
         for j in range(degree + 1):
-            mtrx[i][j] = get_one_dim_funcs_dot(ws, xs, xs, i, j)
-        bs[i] = get_one_dim_funcs_dot(ws, xs, ys, i, 1)
+            cs2 = list(map(lambda x: x ** j, xs))
+            mtrx[i][j] = get_funcs_dot(ws, cs1, cs2)
+
+        bs[i] = get_funcs_dot(ws, cs1, ys)
 
 
 def get_one_dim_aprox_pol(table: Table, degree: int) -> Polynom:
@@ -64,34 +66,21 @@ def get_two_dim_phi_value(x: float, y: float, k: int) -> float:
         return y * y
 
 
-def get_two_dim_funcs_dot(ws: list[float],
-                          cs1: list[float],
-                          cs2: list[float],
-                          k1: int,
-                          k2: int) -> float:
-    s = 0.0
-
-    for i in range(len(ws)):
-        phi1 = get_two_dim_phi_value(cs1[i], cs2[i], k1)
-        phi2 = get_two_dim_phi_value(cs1[i], cs2[i], k2)
-        s += ws[i] * phi1 * phi2
-
-    return s
-
-
 def get_two_dim_sle(mtrx: np.mtrx,
                     bs: np.array,
                     table: Table,
                     degree: int):
-    xs = get_coors_list(table, 0)
-    ys = get_coors_list(table, 1)
     zs = get_coors_list(table, 2)
     ws = get_weights(table)
 
     for i in range(degree + 1):
+        cs1 = list(map(lambda row: get_two_dim_phi_value(row[0], row[1], i), table))
+
         for j in range(degree + 2):
-            mtrx[i][j] = get_two_dim_funcs_dot(ws, xs, ys, i, j)
-        bs[i] = sum(zs) + get_two_dim_funcs_dot(ws, xs, ys, 0, i)
+            cs2 = list(map(lambda row: get_two_dim_phi_value(row[0], row[1], j), table))
+            mtrx[i][j] = get_funcs_dot(ws, cs1, cs2)
+
+        bs[i] = get_funcs_dot(ws, cs1, zs)
 
 
 def get_two_dim_aprox_pol(table: Table, degree: int) -> Polynom:
