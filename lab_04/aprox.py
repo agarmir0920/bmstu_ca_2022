@@ -69,14 +69,14 @@ def get_two_dim_phi_value(x: float, y: float, k: int) -> float:
 def get_two_dim_sle(mtrx: np.matrix,
                     bs: np.array,
                     table: Table,
-                    degree: int):
+                    size: int):
     zs = get_coors_list(table, 2)
     ws = get_weights(table)
 
-    for i in range(degree + 1):
+    for i in range(size):
         cs1 = list(map(lambda row: get_two_dim_phi_value(row[0], row[1], i), table))
 
-        for j in range(degree + 2):
+        for j in range(size):
             cs2 = list(map(lambda row: get_two_dim_phi_value(row[0], row[1], j), table))
             mtrx[i, j] = get_funcs_dot(ws, cs1, cs2)
 
@@ -84,10 +84,15 @@ def get_two_dim_sle(mtrx: np.matrix,
 
 
 def get_two_dim_aprox_pol(table: Table, degree: int) -> Polynom:
-    mtrx = np.matrix(np.zeros((degree + 1, degree + 2)))
-    bs = np.zeros(degree + 1)
+    size = 3
 
-    get_two_dim_sle(mtrx, bs, table, degree)
+    if degree == 2:
+        size = 6
+
+    mtrx = np.matrix(np.zeros((size, size)))
+    bs = np.zeros(size)
+
+    get_two_dim_sle(mtrx, bs, table, size)
 
     return sle.get_roots(mtrx, bs)
 

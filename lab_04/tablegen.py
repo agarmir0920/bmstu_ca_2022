@@ -2,12 +2,12 @@ from random import uniform
 
 
 MIN_X = 0
-MAX_X = 20
-STEP_X = 0.2
+MAX_X = 5
+STEP_X = 1
 
 MIN_Y = 0
-MAX_Y = 20
-STEP_Y = 0.2
+MAX_Y = 5
+STEP_Y = 1
 
 
 def gen_2d():

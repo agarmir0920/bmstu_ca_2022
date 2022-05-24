@@ -76,8 +76,6 @@ def execute_polynom_adding(table: Table, polynoms: Polynoms):
 
     pol = get_aprox_pol(table, degree)
 
-    print(pol)
-
     if pol:
         polynoms.append(pol)
         print("Добавлен полином")
@@ -110,7 +108,14 @@ def get_2d_pol_values(xs: list[float], polynom: Polynom) -> list[float]:
 
 
 def draw2d(table: Table, polynoms: Polynoms):
-    xs = get_coors_list(table, 0)
+    xst = get_coors_list(table, 0)
+    xs = []
+    x = xst[0]
+    xn = max(xst)
+
+    while x <= xn:
+        xs.append(x)
+        x += 0.2
 
     ax = plt.figure().add_subplot()
 
@@ -145,6 +150,9 @@ def draw3d(table: Table, polynoms: Polynoms):
     ys = get_coors_list(table, 1)
 
     ax = plt.figure().add_subplot(projection="3d")
+
+    for row in table:
+        ax.scatter(row[0], row[1], row[2], c="red")
 
     for pol in polynoms:
         zs = get_3d_pol_values(xs, ys, pol)
