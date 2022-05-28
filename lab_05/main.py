@@ -165,12 +165,9 @@ def main():
         for i in range(n):
             ys[i] += dy[i]
 
-        # plt.plot(xs, ys)
-        # plt.show()
-
     plt.plot(xs, ys)
-    plt.show()
     plt.savefig("F0_50.png")
+    plt.show()
 
 
 if __name__ == "__main__":
