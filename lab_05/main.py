@@ -45,11 +45,11 @@ def alpha(t: float) -> float:
     return alpha0 * (t / delta - 1) ** 4 + gamma
 
 
-def get_a_list(ks: list[float], h: float) -> list[float]:
+def get_a_list(ks: list[float]) -> list[float]:
     res = [0]
 
     for i in range(1, len(ks) - 1):
-        res.append((ks[i - 1] + ks[i]) / 2 / h)
+        res.append((ks[i - 1] + ks[i]) / 2)
 
     res.append(0)
 
@@ -60,18 +60,18 @@ def get_b_list(ks: list[float], ps: list[float], h: float) -> list[float]:
     res = [0]
 
     for i in range(1, len(ks) - 1):
-        res.append((ks[i - 1] + ks[i]) / 2 / h + (ks[i] + ks[i + 1]) / 2 / h + ps[i] * h)
+        res.append((ks[i - 1] + ks[i]) / 2 + (ks[i] + ks[i + 1]) / 2 + ps[i] * h ** 2)
 
     res.append(0)
 
     return res
 
 
-def get_c_list(ks: list[float], h: float) -> list[float]:
+def get_c_list(ks: list[float]) -> list[float]:
     res = [0]
 
     for i in range(len(ks) - 1):
-        res.append((ks[i - 1] + ks[i]) / 2 / h)
+        res.append((ks[i - 1] + ks[i]) / 2)
 
     res.append(0)
 
@@ -82,7 +82,7 @@ def get_d_list(fs: list[float], h: float) -> list[float]:
     res = [0]
 
     for i in range(1, len(fs) - 1):
-        res.append(fs[i] * h)
+        res.append(fs[i] * h ** 2)
 
     res.append(0)
 
@@ -100,34 +100,37 @@ def main():
 
     running = True
 
+    ks = list(map(k, ys))
+    ps = list(map(p, ys))
+    fs = list(map(f, ys))
+
+    a_lst = get_a_list(ks)
+    b_lst = get_b_list(ks, ps, h)
+    c_lst = get_c_list(ks)
+    d_lst = get_d_list(fs, h)
+
     while running:
-        ks = list(map(k, ys))
-        ps = list(map(p, ys))
-        fs = list(map(f, ys))
-
-        a_lst = get_a_list(ks, h)
-        b_lst = get_b_list(ks, ps, h)
-        c_lst = get_c_list(ks, h)
-        d_lst = get_d_list(fs, h)
-
         beta = ks[0] + a1 * c1 * m1 * ys[0] ** (m1 - 1) * (ys[0] - ys[1])
         H0 = ks[0] * ys[0] - ks[0] * ys[1] - F0 * h
         ksi = [ks[0] / beta]
         eta = [-H0 / beta]
 
+        print(H0, ks[0], beta)
+        print(ksi, eta)
+
         for i in range(1, n - 1):
-            dadyl = a1 * c1 * m1 * ys[i - 1] ** (m1 - 1) / 2 / h
-            dady = a1 * c1 * m1 * ys[i] ** (m1 - 1) / 2 / h
+            dadyl = a1 * c1 * m1 * ys[i - 1] ** (m1 - 1) / 2
+            dady = a1 * c1 * m1 * ys[i] ** (m1 - 1) / 2
             dcdy = dady
-            dcdyr = a1 * c1 * m1 * ys[i + 1] ** (m1 - 1) / 2 / h
+            dcdyr = a1 * c1 * m1 * ys[i + 1] ** (m1 - 1) / 2
             dbdyl = dadyl
-            dbdy = dady + dcdy + 8 * alpha0 * h / R / delta * (ys[i] / delta - 1) ** 3
+            dbdy = dady + dcdy + 8 * alpha0 * h ** 2 / R / delta * (ys[i] / delta - 1) ** 3
             dbdyr = dcdyr
-            dddy = 8 * alpha0 * T0 * h / R / delta * (ys[i] / delta - 1) ** 3
+            dddy = 8 * alpha0 * T0 * h ** 2 / R / delta * (ys[i] / delta - 1) ** 3
 
             ai = dadyl * ys[i - 1] + a_lst[i] - dbdyl * ys[i]
             bi = dady * ys[i - 1] - dbdy * ys[i] - b_lst[i] + dcdy * ys[i + 1] + dddy
-            ci = -dbdyr * ys[i] + dcdyr * ys[i + 1] * c_lst[i]
+            ci = -dbdyr * ys[i] + dcdyr * ys[i + 1] + c_lst[i]
             di = a_lst[i] * ys[i - 1] - b_lst[i] * ys[i] + c_lst[i] * ys[i + 1] + d_lst[i]
 
             ksii = -ci / (ai * ksi[-1] + bi)
@@ -156,20 +159,18 @@ def main():
         print([dy[i] > dy[i + 1] for i in range(n - 1)])
         print()
 
-        # break
-
-        # plt.plot(xs, ys)
-        # plt.show()
-
-        if max([abs(dy[i] / ys[i]) for i in range(n)]) < EPS:
+        if max([abs(dy[i] / ys[i]) for i in range(n)]) <= EPS:
             break
 
         for i in range(n):
             ys[i] += dy[i]
 
+        # plt.plot(xs, ys)
+        # plt.show()
+
     plt.plot(xs, ys)
     plt.show()
-    plt.savefig("1.png")
+    plt.savefig("F0_50.png")
 
 
 if __name__ == "__main__":
