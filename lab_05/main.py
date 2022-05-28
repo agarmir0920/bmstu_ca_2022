@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from numpy import float128
 
 a1 = 0.0134
 b1 = 1
@@ -115,9 +114,6 @@ def main():
         ksi = [ks[0] / beta]
         eta = [-H0 / beta]
 
-        print(H0, ks[0], beta)
-        print(ksi, eta)
-
         for i in range(1, n - 1):
             dadyl = a1 * c1 * m1 * ys[i - 1] ** (m1 - 1) / 2
             dady = a1 * c1 * m1 * ys[i] ** (m1 - 1) / 2
@@ -139,9 +135,6 @@ def main():
             ksi.append(ksii)
             eta.append(etai)
 
-        print("ksi:", ksi)
-        print("eta:", eta)
-
         dhdyl = ks[-1]
         dhdy = a1 * c1 * m1 * ys[-1] ** (m1 - 1) * (ys[-2] - ys[-1])
         dhdy -= ks[-1] + alpha(ys[-1]) * h
@@ -152,12 +145,6 @@ def main():
 
         for i in range(n - 2, -1, -1):
             dy[i] = ksi[i] * dy[i + 1] + eta[i]
-
-        print("ys:", ys)
-        print("dy:", dy)
-        print(max([abs(dy[i] / ys[i]) for i in range(n)]))
-        print([dy[i] > dy[i + 1] for i in range(n - 1)])
-        print()
 
         if max([abs(dy[i] / ys[i]) for i in range(n)]) <= EPS:
             break
