@@ -4,17 +4,16 @@ from os.path import exists
 from datatable import *
 from aprox import *
 
-# TODO: Пофиксить двумерную апроксимацию
-
 Polynoms = list[Polynom]
 
 EXIT = 0
 LOAD_TABLE = 1
 CHANGE_P = 2
-ADD_POL = 3
-CLEAR_POLS = 4
-PRINT_TABLE = 5
-PRINT_GRAPH = 6
+CHANGE_CUR_P = 3
+ADD_POL = 4
+CLEAR_POLS = 5
+PRINT_TABLE = 6
+PRINT_GRAPH = 7
 
 ONE_DIM = 3
 TWO_DIM = 4
@@ -23,14 +22,15 @@ TWO_DIM = 4
 def print_menu():
     print("\nМеню:\n")
 
-    print("1. Загрузить таблицу из файла")
-    print("2. Изменить веса")
-    print("3. Добавить апроксимирующий полином")
-    print("4. Очистить список апроксимирующих полиномов")
-    print("5. Вывести полную таблицу")
-    print("6. Вывести результат\n")
+    print(str(LOAD_TABLE) + ". Загрузить таблицу из файла")
+    print(str(CHANGE_P) + ". Изменить веса")
+    print(str(CHANGE_CUR_P) + ". Изменить вес")
+    print(str(ADD_POL) + ". Добавить апроксимирующий полином")
+    print(str(CLEAR_POLS) + ". Очистить список апроксимирующих полиномов")
+    print(str(PRINT_TABLE) + ". Вывести полную таблицу")
+    print(str(PRINT_GRAPH) + ". Вывести результат\n")
 
-    print("0. Выход\n\n")
+    print(str(EXIT) + ". Выход\n\n")
 
     print("Введите команду: ", end='')
 
@@ -113,7 +113,7 @@ def draw2d(table: Table, polynoms: Polynoms):
     x = xst[0]
     xn = max(xst)
 
-    while x <= xn:
+    while x <= xn + 0.2:
         xs.append(x)
         x += 0.2
 
@@ -172,11 +172,27 @@ def execute_graph_printing(table: Table, polynoms: Polynoms):
         draw3d(table, polynoms)
 
 
+def execute_cur_p_changing(table: Table):
+    if not table:
+        return
+
+    ind = int(input("Введите индекс: "))
+
+    if 0 <= ind < len(table):
+        p = float(input("Введите значение веса: "))
+
+        table[ind][-1] = p
+
+    return table
+
+
 def execute_command(table: Table, polynoms: Polynoms, cmd: int):
     if cmd == LOAD_TABLE:
         table, polynoms = execute_loading(table, polynoms)
     elif cmd == CHANGE_P:
         table = execute_p_changing(table)
+    elif cmd == CHANGE_CUR_P:
+        table = execute_cur_p_changing(table)
     elif cmd == ADD_POL:
         table, polynoms = execute_polynom_adding(table, polynoms)
     elif cmd == CLEAR_POLS:
